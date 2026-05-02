@@ -1,0 +1,12 @@
+{
+  "name": "batchman",
+  "version": "0.1.0",
+  "description": "Overlay fix hints on your internal alerts page",
+  "scripts": {
+    "validate": "node scripts/validate.js",
+    "build": "node scripts/build.js"
+  },
+  "engines": {
+    "node": ">=16"
+  }
+}

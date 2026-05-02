@@ -17,20 +17,27 @@ BatchMan/
 ├── extension/          # Browser extension (Chrome/Brave, MV3)
 │   ├── manifest.json
 │   ├── content.js      # Reads the DOM, injects hint overlays
-│   ├── popup.html      # Optional: quick access to knowledge base
+│   ├── options.html/js # Settings UI (URL pattern + CSS selectors)
+│   ├── popup.html/js   # Toolbar popup
+│   ├── style.css
 │   └── icons/
 ├── knowledge-base/
-│   └── alerts.json     # The hand-maintained list of known alerts + fixes
-└── README.md
+│   └── alerts.json     # Source of truth — edit this, then run npm run build
+├── scripts/
+│   ├── validate.js     # Validates alerts.json (run standalone or via build)
+│   └── build.js        # Validates + copies alerts.json into extension/
+└── package.json
 ```
 
-### Knowledge base format (`alerts.json`)
+`extension/alerts.json` is a **build artifact** — never edit it directly. Edit `knowledge-base/alerts.json` and run `npm run build`.
+
+### Knowledge base format (`knowledge-base/alerts.json`)
 
 ```json
 [
   {
     "id": "unique-alert-id",
-    "match": "substring or pattern found in the alert description",
+    "match": "substring found in the alert description (case-insensitive)",
     "title": "Human-readable name for this alert type",
     "hint": "Short description of what this is and what to check first",
     "wiki": "https://internal-wiki/link-to-full-guide",
@@ -39,7 +46,16 @@ BatchMan/
 ]
 ```
 
-Matching is done by checking whether the alert description **contains** the `match` string (case-insensitive). If multiple entries match, all are shown. Unknown alerts are visually flagged for escalation.
+| Field   | Required | Type            | Notes |
+|---------|----------|-----------------|-------|
+| `id`    | Yes      | string          | Unique identifier, no spaces |
+| `match` | Yes      | string          | Substring to look for in the alert description |
+| `title` | Yes      | string          | Shown in the hint panel header |
+| `hint`  | Yes      | string          | One or two sentences — what it is and what to do first |
+| `wiki`  | No       | string or null  | Link to the full wiki guide |
+| `sql`   | No       | string or null  | Ready-to-copy SQL for the common cleanup |
+
+Matching is case-insensitive substring search. If multiple entries match a single alert, all are shown. Unknown alerts are flagged visually for escalation.
 
 ---
 
@@ -65,12 +81,13 @@ Matching is done by checking whether the alert description **contains** the `mat
 
 **Goal:** Make it easy for the team to add/edit/remove alert entries without touching extension code.
 
-- [ ] Document the `alerts.json` format clearly with examples
-- [ ] Add validation script to catch malformed entries before deploying
-- [ ] Establish a lightweight process for adding new entries (PR or direct edit)
+- [x] Separate knowledge base from extension code (`knowledge-base/alerts.json`)
+- [x] Validate script — catches missing fields, duplicate IDs, duplicate match strings
+- [x] Build script — validates then copies into extension, prints reload reminder
+- [x] `.gitignore` — `extension/alerts.json` is a build artifact, not committed
 - [ ] Seed the knowledge base with the ~25 known alert types
 
-**Definition of done:** A non-developer team member can add a new alert entry by editing one JSON file.
+**Definition of done:** A developer edits one JSON file, runs one command, and reloads the extension.
 
 ---
 
@@ -107,12 +124,36 @@ Matching is done by checking whether the alert description **contains** the `mat
 
 ---
 
-## Getting Started (development)
+## Getting Started
 
-1. Clone the repo
-2. Open `chrome://extensions` in Chrome or Brave
-3. Enable **Developer mode**
-4. Click **Load unpacked** and select the `extension/` folder
-5. Navigate to the alerts page — BatchMan is active
+### First-time setup
+```bash
+git clone <repo-url>
+cd BatchMan
+npm run build          # validates + copies knowledge base into extension/
+```
 
-To update after editing files, click the refresh icon on the extension card in `chrome://extensions`.
+Then in Chrome or Brave:
+1. Go to `chrome://extensions`
+2. Enable **Developer mode** (top-right toggle)
+3. Click **Load unpacked** → select the `extension/` folder
+4. Click the BatchMan icon in the toolbar → **Settings**
+5. Enter your alerts page URL pattern and the CSS selectors for alert rows
+
+### After a knowledge base update (`git pull`)
+```bash
+npm run build
+# Then click ↺ on the BatchMan card in chrome://extensions
+```
+
+### Adding or editing an alert entry
+1. Edit `knowledge-base/alerts.json`
+2. Run `npm run validate` to check for errors
+3. Run `npm run build` to apply it to the extension
+4. Commit and push so the team can pull the update
+
+### Useful commands
+| Command              | What it does |
+|----------------------|--------------|
+| `npm run validate`   | Check `knowledge-base/alerts.json` for errors and warnings |
+| `npm run build`      | Validate + copy into `extension/alerts.json` |
