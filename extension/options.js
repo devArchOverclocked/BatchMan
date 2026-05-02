@@ -1,6 +1,7 @@
 const DEFAULTS = {
   urlPattern: '',
   rowSelector: '.alert-row',
+  descriptionFieldName: '',
   descriptionSelector: '',
   triggerFieldName: '',
   triggerFieldValue: '',
@@ -14,6 +15,7 @@ async function load() {
   const stored = await chrome.storage.sync.get(DEFAULTS);
   document.getElementById('urlPattern').value = stored.urlPattern;
   document.getElementById('rowSelector').value = stored.rowSelector;
+  document.getElementById('descriptionFieldName').value = stored.descriptionFieldName;
   document.getElementById('descriptionSelector').value = stored.descriptionSelector;
   document.getElementById('triggerFieldName').value = stored.triggerFieldName;
   document.getElementById('triggerFieldValue').value = stored.triggerFieldValue;
@@ -27,6 +29,7 @@ document.getElementById('save').addEventListener('click', async () => {
   const settings = {
     urlPattern: document.getElementById('urlPattern').value.trim(),
     rowSelector: document.getElementById('rowSelector').value.trim() || DEFAULTS.rowSelector,
+    descriptionFieldName: document.getElementById('descriptionFieldName').value.trim(),
     descriptionSelector: document.getElementById('descriptionSelector').value.trim(),
     triggerFieldName: document.getElementById('triggerFieldName').value.trim(),
     triggerFieldValue: document.getElementById('triggerFieldValue').value.trim(),

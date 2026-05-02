@@ -1,6 +1,7 @@
 const DEFAULTS = {
   urlPattern: '',
   rowSelector: '.alert-row',
+  descriptionFieldName: '',
   descriptionSelector: '',
   triggerFieldName: '',
   triggerFieldValue: '',
@@ -71,6 +72,9 @@ function triggerConditionMet(config) {
 }
 
 function getDescription(config) {
+  if (config.descriptionFieldName) {
+    return getSharePointFieldValue(config.descriptionFieldName) ?? '';
+  }
   if (config.descriptionSelector) {
     const el = document.querySelector(config.descriptionSelector);
     return el ? el.textContent.trim() : '';
