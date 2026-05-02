@@ -1,5 +1,3 @@
-const BATCHMAN_ATTR = 'data-batchman-processed';
-
 const DEFAULTS = {
   urlPattern: '',
   rowSelector: '.alert-row',
@@ -19,6 +17,9 @@ async function loadConfig() {
 async function loadKnowledgeBase() {
   const url = chrome.runtime.getURL('alerts.json');
   const response = await fetch(url);
+  if (!response.ok) {
+    throw new Error(`alerts.json not found — did you run "npm run build"?`);
+  }
   return response.json();
 }
 
@@ -33,7 +34,6 @@ function getDescription(config) {
     const el = document.querySelector(config.descriptionSelector);
     return el ? el.textContent.trim() : '';
   }
-  // Fallback: look for any element matching the row selector
   const el = document.querySelector(config.rowSelector);
   return el ? el.textContent.trim() : document.body.innerText;
 }
@@ -58,10 +58,23 @@ function buildActionTag(action) {
   return `<span class="batchman-action ${def.cls}">${def.text}</span>`;
 }
 
+function buildErrorPanel(message) {
+  const panel = document.createElement('div');
+  panel.id = 'batchman-main-panel';
+  panel.className = 'batchman-panel batchman-error';
+  panel.innerHTML = `
+    <div class="batchman-panel-header">
+      <span class="batchman-badge batchman-badge--unknown">⚠ BatchMan</span>
+      <span class="batchman-panel-title">${escapeHtml(message)}</span>
+    </div>
+  `;
+  return panel;
+}
+
 function buildHintPanel(matches) {
   const panel = document.createElement('div');
+  panel.id = 'batchman-main-panel';
   panel.className = 'batchman-panel';
-  panel.setAttribute('id', 'batchman-main-panel');
 
   if (matches.length === 0) {
     panel.classList.add('batchman-unknown');
@@ -111,7 +124,6 @@ function attachCopyHandlers(panel) {
 }
 
 function injectPanel(panel, config) {
-  // Prefer injecting right after the description field
   if (config.descriptionSelector) {
     const descEl = document.querySelector(config.descriptionSelector);
     if (descEl) {
@@ -119,9 +131,13 @@ function injectPanel(panel, config) {
       return;
     }
   }
-  // Fall back to injecting at the top of the main content area
-  const anchor = document.querySelector(config.rowSelector) || document.body;
-  anchor.insertAdjacentElement('afterend', panel);
+  const anchor = document.querySelector(config.rowSelector);
+  if (anchor) {
+    anchor.insertAdjacentElement('afterend', panel);
+    return;
+  }
+  // Fallback: prepend to body so it is always visible
+  document.body.prepend(panel);
 }
 
 function setBadge(status) {
@@ -129,7 +145,6 @@ function setBadge(status) {
 }
 
 function storePanelData(matches) {
-  // Store current page result so popup can read it
   const data = matches.length > 0
     ? { status: 'known', titles: matches.map(m => m.title) }
     : { status: 'unknown' };
@@ -140,16 +155,18 @@ async function init() {
   const config = await loadConfig();
   if (!urlMatchesPattern(config.urlPattern)) return;
 
+  if (document.getElementById('batchman-main-panel')) return;
+
   let knowledgeBase;
   try {
     knowledgeBase = await loadKnowledgeBase();
   } catch (e) {
-    console.error('[BatchMan] Failed to load alerts.json:', e);
+    console.error('[BatchMan]', e.message);
+    const panel = buildErrorPanel(`Knowledge base not found — run "npm run build" then reload the extension.`);
+    document.body.prepend(panel);
+    setBadge('unknown');
     return;
   }
-
-  // Bail if already injected (e.g. on back/forward navigation)
-  if (document.getElementById('batchman-main-panel')) return;
 
   const description = getDescription(config);
   if (!description) return;
