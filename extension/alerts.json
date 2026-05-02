@@ -1,0 +1,26 @@
+[
+  {
+    "id": "example-process-crash",
+    "match": "ProcessCrashException",
+    "title": "Process crash — restart required",
+    "hint": "The worker process exited unexpectedly. Check the service logs first to confirm it is not a data issue, then restart.",
+    "wiki": "https://YOUR_WIKI/process-crash",
+    "sql": "SELECT TOP 10 * FROM error_log WHERE error_type = 'ProcessCrash' ORDER BY created_at DESC"
+  },
+  {
+    "id": "example-false-positive",
+    "match": "HeartbeatTimeout",
+    "title": "Heartbeat timeout — likely false positive",
+    "hint": "Usually triggered during deployments. Check if a deployment happened within the last 10 minutes. If yes, close the alert.",
+    "wiki": "https://YOUR_WIKI/heartbeat-timeout",
+    "sql": null
+  },
+  {
+    "id": "example-sql-cleanup",
+    "match": "DuplicateKeyViolation",
+    "title": "Duplicate key — SQL cleanup needed",
+    "hint": "A duplicate record was inserted. Run the query below to identify and remove the duplicate, then close the alert.",
+    "wiki": "https://YOUR_WIKI/duplicate-key",
+    "sql": "SELECT id, COUNT(*) as cnt FROM your_table GROUP BY business_key HAVING cnt > 1"
+  }
+]

@@ -1,0 +1,101 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <title>BatchMan — Settings</title>
+  <style>
+    body {
+      font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+      font-size: 14px;
+      color: #1e293b;
+      max-width: 560px;
+      margin: 40px auto;
+      padding: 0 16px;
+    }
+    h1 { font-size: 20px; margin-bottom: 4px; }
+    p.sub { color: #64748b; margin: 0 0 24px; font-size: 13px; }
+    label { display: block; font-weight: 600; margin-bottom: 4px; }
+    .hint { color: #64748b; font-size: 12px; margin: 0 0 12px; }
+    input[type="text"] {
+      width: 100%;
+      padding: 7px 10px;
+      border: 1px solid #cbd5e1;
+      border-radius: 4px;
+      font-size: 13px;
+      box-sizing: border-box;
+      margin-bottom: 4px;
+    }
+    input[type="text"]:focus {
+      outline: none;
+      border-color: #2563eb;
+      box-shadow: 0 0 0 2px #bfdbfe;
+    }
+    button {
+      background: #2563eb;
+      color: white;
+      border: none;
+      border-radius: 4px;
+      padding: 8px 18px;
+      font-size: 13px;
+      cursor: pointer;
+      margin-top: 8px;
+    }
+    button:hover { background: #1d4ed8; }
+    #saved {
+      display: none;
+      color: #16a34a;
+      font-size: 13px;
+      margin-left: 10px;
+    }
+    hr { border: none; border-top: 1px solid #e2e8f0; margin: 24px 0; }
+    .devtools-hint {
+      background: #f8fafc;
+      border: 1px solid #e2e8f0;
+      border-radius: 4px;
+      padding: 10px 14px;
+      font-size: 12px;
+      color: #475569;
+      line-height: 1.6;
+    }
+    code {
+      background: #e2e8f0;
+      padding: 1px 4px;
+      border-radius: 3px;
+      font-family: 'Courier New', monospace;
+    }
+  </style>
+</head>
+<body>
+  <h1>🦇 BatchMan — Settings</h1>
+  <p class="sub">Configure which page to scan and how to find alert rows in the DOM.</p>
+
+  <label for="urlPattern">Alerts page URL pattern</label>
+  <p class="hint">Use <code>*</code> as a wildcard. Example: <code>*://intranet.company.com/alerts*</code></p>
+  <input type="text" id="urlPattern" placeholder="*://YOUR_INTERNAL_DOMAIN/alerts*" />
+
+  <hr>
+
+  <label for="rowSelector">Alert row CSS selector</label>
+  <p class="hint">Matches each individual alert item. Example: <code>.alert-item</code> or <code>tr.ms-List-cell</code></p>
+  <input type="text" id="rowSelector" placeholder=".alert-row" />
+
+  <label for="descriptionSelector">Description CSS selector <span style="font-weight:400;color:#64748b">(optional)</span></label>
+  <p class="hint">Selector <em>within</em> each row for the description text. Leave empty to use the full row text.</p>
+  <input type="text" id="descriptionSelector" placeholder=".alert-description" />
+
+  <button id="save">Save settings</button>
+  <span id="saved">✓ Saved — reload the alerts page for changes to take effect.</span>
+
+  <hr>
+
+  <div class="devtools-hint">
+    <strong>How to find your selectors:</strong><br>
+    1. Open the alerts page and press <code>F12</code> to open DevTools.<br>
+    2. Click the element picker (top-left of DevTools) and click an alert row.<br>
+    3. Right-click the highlighted element → <em>Copy → Copy selector</em>.<br>
+    4. Paste it here and simplify if needed (e.g. remove <code>:nth-child</code> parts).
+  </div>
+
+  <script src="options.js"></script>
+</body>
+</html>
