@@ -6,6 +6,8 @@ const DEFAULTS = {
   triggerFieldValue: '',
   criticalFieldName: '',
   criticalFieldValue: '',
+  suppressFieldName: '',
+  suppressFieldValue: '',
 };
 
 const ACTION_LABELS = {
@@ -205,9 +207,16 @@ function storePanelData(matches) {
   chrome.storage.session?.set({ batchmanPageResult: data }).catch(() => {});
 }
 
+function isSuppressed(config) {
+  if (!config.suppressFieldName || !config.suppressFieldValue) return false;
+  const actual = getSharePointFieldValue(config.suppressFieldName);
+  return actual !== null && actual.toLowerCase() === config.suppressFieldValue.toLowerCase();
+}
+
 async function init() {
   const config = await loadConfig();
   if (!urlMatchesPattern(config.urlPattern)) return;
+  if (isSuppressed(config)) return;
 
   if (document.getElementById('batchman-main-panel')) return;
 

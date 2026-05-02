@@ -103,6 +103,16 @@
   <p class="hint">The value that triggers the critical banner. Example: <code>A - Critical</code></p>
   <input type="text" id="criticalFieldValue" placeholder="A - Critical" />
 
+  <hr>
+
+  <label for="suppressFieldName">Suppress field internal name <span style="font-weight:400;color:#64748b">(optional)</span></label>
+  <p class="hint">Hide all BatchMan panels when this field matches the value below. Example: <code>Status</code></p>
+  <input type="text" id="suppressFieldName" placeholder="Status" />
+
+  <label for="suppressFieldValue">Suppress field value <span style="font-weight:400;color:#64748b">(optional)</span></label>
+  <p class="hint">BatchMan shows nothing when the field above equals this value. Example: <code>90 - Lukket</code></p>
+  <input type="text" id="suppressFieldValue" placeholder="90 - Lukket" />
+
   <button id="save">Save settings</button>
   <span id="saved">✓ Saved — reload the alerts page for changes to take effect.</span>
 
