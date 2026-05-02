@@ -6,6 +6,12 @@ const DEFAULTS = {
   descriptionSelector: '',
 };
 
+const ACTION_LABELS = {
+  close:    { text: 'Safe to close',              cls: 'batchman-action--close' },
+  sql:      { text: 'Run SQL below, then close',  cls: 'batchman-action--sql' },
+  escalate: { text: 'Escalate internally',         cls: 'batchman-action--escalate' },
+};
+
 async function loadConfig() {
   return chrome.storage.sync.get(DEFAULTS);
 }
@@ -17,18 +23,19 @@ async function loadKnowledgeBase() {
 }
 
 function urlMatchesPattern(pattern) {
-  if (!pattern) return true; // no filter set — run on all pages
-  // Convert glob-style pattern to a regex
+  if (!pattern) return true;
   const escaped = pattern.replace(/[.+^${}()|[\]\\]/g, '\\$&').replace(/\*/g, '.*');
   return new RegExp(`^${escaped}$`).test(window.location.href);
 }
 
-function getDescription(row, descriptionSelector) {
-  if (descriptionSelector) {
-    const el = row.querySelector(descriptionSelector);
-    return el ? el.textContent.trim() : row.textContent.trim();
+function getDescription(config) {
+  if (config.descriptionSelector) {
+    const el = document.querySelector(config.descriptionSelector);
+    return el ? el.textContent.trim() : '';
   }
-  return row.textContent.trim();
+  // Fallback: look for any element matching the row selector
+  const el = document.querySelector(config.rowSelector);
+  return el ? el.textContent.trim() : document.body.innerText;
 }
 
 function findMatches(description, knowledgeBase) {
@@ -45,13 +52,25 @@ function escapeHtml(str) {
     .replace(/"/g, '&quot;');
 }
 
+function buildActionTag(action) {
+  const def = ACTION_LABELS[action];
+  if (!def) return '';
+  return `<span class="batchman-action ${def.cls}">${def.text}</span>`;
+}
+
 function buildHintPanel(matches) {
   const panel = document.createElement('div');
   panel.className = 'batchman-panel';
+  panel.setAttribute('id', 'batchman-main-panel');
 
   if (matches.length === 0) {
     panel.classList.add('batchman-unknown');
-    panel.innerHTML = `<span class="batchman-badge batchman-badge--unknown">⚠ Unknown — escalate</span>`;
+    panel.innerHTML = `
+      <div class="batchman-panel-header">
+        <span class="batchman-badge batchman-badge--unknown">⚠ Unknown alert</span>
+        <span class="batchman-panel-title">No match found in knowledge base — escalate internally</span>
+      </div>
+    `;
     return panel;
   }
 
@@ -60,12 +79,13 @@ function buildHintPanel(matches) {
     const entry = document.createElement('div');
     entry.className = 'batchman-entry';
     entry.innerHTML = `
-      <div class="batchman-header">
+      <div class="batchman-panel-header">
         <span class="batchman-badge batchman-badge--known">✓ Known</span>
-        <span class="batchman-title">${escapeHtml(match.title)}</span>
+        <span class="batchman-panel-title">${escapeHtml(match.title)}</span>
+        ${match.action ? buildActionTag(match.action) : ''}
       </div>
       <div class="batchman-hint">${escapeHtml(match.hint)}</div>
-      ${match.wiki ? `<a class="batchman-link" href="${escapeHtml(match.wiki)}" target="_blank">Open wiki →</a>` : ''}
+      ${match.wiki ? `<a class="batchman-link" href="${escapeHtml(match.wiki)}" target="_blank">Open wiki guide →</a>` : ''}
       ${match.sql ? `
         <div class="batchman-sql-wrap">
           <code class="batchman-sql">${escapeHtml(match.sql)}</code>
@@ -90,28 +110,34 @@ function attachCopyHandlers(panel) {
   });
 }
 
-function processRow(row, knowledgeBase, descriptionSelector) {
-  if (row.hasAttribute(BATCHMAN_ATTR)) return;
-  row.setAttribute(BATCHMAN_ATTR, 'true');
-
-  const description = getDescription(row, descriptionSelector);
-  const matches = findMatches(description, knowledgeBase);
-  const panel = buildHintPanel(matches);
-
-  attachCopyHandlers(panel);
-  row.appendChild(panel);
+function injectPanel(panel, config) {
+  // Prefer injecting right after the description field
+  if (config.descriptionSelector) {
+    const descEl = document.querySelector(config.descriptionSelector);
+    if (descEl) {
+      descEl.insertAdjacentElement('afterend', panel);
+      return;
+    }
+  }
+  // Fall back to injecting at the top of the main content area
+  const anchor = document.querySelector(config.rowSelector) || document.body;
+  anchor.insertAdjacentElement('afterend', panel);
 }
 
-function scanPage(knowledgeBase, config) {
-  const rows = document.querySelectorAll(
-    `${config.rowSelector}:not([${BATCHMAN_ATTR}])`
-  );
-  rows.forEach(row => processRow(row, knowledgeBase, config.descriptionSelector));
+function setBadge(status) {
+  chrome.runtime.sendMessage({ type: 'SET_BADGE', status });
+}
+
+function storePanelData(matches) {
+  // Store current page result so popup can read it
+  const data = matches.length > 0
+    ? { status: 'known', titles: matches.map(m => m.title) }
+    : { status: 'unknown' };
+  chrome.storage.session?.set({ batchmanPageResult: data }).catch(() => {});
 }
 
 async function init() {
   const config = await loadConfig();
-
   if (!urlMatchesPattern(config.urlPattern)) return;
 
   let knowledgeBase;
@@ -122,10 +148,19 @@ async function init() {
     return;
   }
 
-  scanPage(knowledgeBase, config);
+  // Bail if already injected (e.g. on back/forward navigation)
+  if (document.getElementById('batchman-main-panel')) return;
 
-  const observer = new MutationObserver(() => scanPage(knowledgeBase, config));
-  observer.observe(document.body, { childList: true, subtree: true });
+  const description = getDescription(config);
+  if (!description) return;
+
+  const matches = findMatches(description, knowledgeBase);
+  const panel = buildHintPanel(matches);
+
+  attachCopyHandlers(panel);
+  injectPanel(panel, config);
+  setBadge(matches.length > 0 ? 'known' : 'unknown');
+  storePanelData(matches);
 }
 
 init();

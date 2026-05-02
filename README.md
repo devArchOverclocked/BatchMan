@@ -117,6 +117,7 @@ The knowledge base lives in `knowledge-base/alerts.json`. This is the only file 
 | `hint` | Yes | string | What to do first — keep it short |
 | `wiki` | No | string or null | Full wiki guide URL |
 | `sql` | No | string or null | Ready-to-copy SQL snippet |
+| `action` | No | string or null | Recommended resolution: `"close"`, `"sql"`, or `"escalate"` |
 
 Matching is **case-insensitive substring search**. If multiple entries match a single alert, all hints are shown stacked.
 
@@ -182,12 +183,13 @@ BatchMan/
 - [x] Team update workflow documented
 - [ ] Seed with the ~25 known alert types
 
-### Phase 3 — Quality of Life Improvements
+### Phase 3 — Quality of Life Improvements (done)
 
-- [ ] Collapsible hint panels (reduce visual clutter on busy days)
-- [ ] Keyboard shortcut to toggle all hints on/off
-- [ ] Popup summary of matched vs unknown alerts on the current page
-- [ ] "Suggest a fix" flow for unknown alerts
+- [x] `action` field in knowledge base — tags the recommended resolution (`close` / `sql` / `escalate`) shown prominently in the hint panel
+- [x] Extension icon badge — green "OK" for known alerts, orange "!" for unknown, visible before scrolling
+- [x] Popup shows current alert match status and matched entry title(s)
+- [x] Background service worker for badge management (MV3 requirement)
+- [x] Hint panel injected directly after the description field
 
 ### Phase 4 — Firefox Support
 

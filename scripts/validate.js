@@ -7,7 +7,8 @@ const path = require('path');
 const KB_PATH = path.resolve(__dirname, '../knowledge-base/alerts.json');
 
 const REQUIRED_FIELDS = ['id', 'match', 'title', 'hint'];
-const OPTIONAL_FIELDS = ['wiki', 'sql'];
+const OPTIONAL_FIELDS = ['wiki', 'sql', 'action'];
+const VALID_ACTIONS = new Set(['close', 'sql', 'escalate']);
 const ALL_FIELDS = new Set([...REQUIRED_FIELDS, ...OPTIONAL_FIELDS]);
 
 let errors = [];
@@ -52,12 +53,23 @@ entries.forEach((entry, i) => {
     }
   });
 
-  // Optional fields must be string or null if present
+  // Optional string-or-null fields
   ['wiki', 'sql'].forEach(field => {
     if (field in entry && entry[field] !== null && typeof entry[field] !== 'string') {
       error(`${label}: "${field}" must be a string or null`);
     }
   });
+
+  // action must be a recognised value if present
+  if ('action' in entry && entry.action !== null) {
+    if (!VALID_ACTIONS.has(entry.action)) {
+      error(`${label}: "action" must be one of: ${[...VALID_ACTIONS].join(', ')} (got "${entry.action}")`);
+    }
+    // Warn if action is "sql" but no SQL is provided
+    if (entry.action === 'sql' && !entry.sql) {
+      warn(`${label}: action is "sql" but no sql field is provided`);
+    }
+  }
 
   // Unknown fields
   Object.keys(entry).forEach(key => {

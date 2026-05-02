@@ -3,17 +3,19 @@
     "id": "example-process-crash",
     "match": "ProcessCrashException",
     "title": "Process crash — restart required",
-    "hint": "The worker process exited unexpectedly. Check the service logs first to confirm it is not a data issue, then restart.",
+    "hint": "The worker process exited unexpectedly. Check the service logs to confirm it is not a data issue, then restart the process.",
     "wiki": "https://YOUR_WIKI/process-crash",
-    "sql": "SELECT TOP 10 * FROM error_log WHERE error_type = 'ProcessCrash' ORDER BY created_at DESC"
+    "sql": "SELECT TOP 10 * FROM error_log WHERE error_type = 'ProcessCrash' ORDER BY created_at DESC",
+    "action": "sql"
   },
   {
     "id": "example-false-positive",
     "match": "HeartbeatTimeout",
     "title": "Heartbeat timeout — likely false positive",
-    "hint": "Usually triggered during deployments. Check if a deployment happened within the last 10 minutes. If yes, close the alert.",
+    "hint": "Usually triggered during deployments. Check if a deployment happened within the last 10 minutes. If yes, this is safe to close.",
     "wiki": "https://YOUR_WIKI/heartbeat-timeout",
-    "sql": null
+    "sql": null,
+    "action": "close"
   },
   {
     "id": "example-sql-cleanup",
@@ -21,6 +23,7 @@
     "title": "Duplicate key — SQL cleanup needed",
     "hint": "A duplicate record was inserted. Run the query below to identify and remove the duplicate, then close the alert.",
     "wiki": "https://YOUR_WIKI/duplicate-key",
-    "sql": "SELECT id, COUNT(*) as cnt FROM your_table GROUP BY business_key HAVING cnt > 1"
+    "sql": "SELECT id, COUNT(*) as cnt FROM your_table GROUP BY business_key HAVING cnt > 1",
+    "action": "sql"
   }
 ]
