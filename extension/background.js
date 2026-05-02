@@ -9,6 +9,10 @@ chrome.runtime.onMessage.addListener((message, sender) => {
       chrome.action.setBadgeText({ text: 'OK', tabId });
       chrome.action.setBadgeBackgroundColor({ color: '#16a34a', tabId });
       break;
+    case 'critical':
+      chrome.action.setBadgeText({ text: '!!!', tabId });
+      chrome.action.setBadgeBackgroundColor({ color: '#dc2626', tabId });
+      break;
     case 'unknown':
       chrome.action.setBadgeText({ text: '!', tabId });
       chrome.action.setBadgeBackgroundColor({ color: '#ea580c', tabId });

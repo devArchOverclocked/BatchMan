@@ -93,6 +93,16 @@
   <p class="hint">BatchMan will only show if the field above equals this value (case-insensitive). Example: <code>Event</code></p>
   <input type="text" id="triggerFieldValue" placeholder="Event" />
 
+  <hr>
+
+  <label for="criticalFieldName">Critical alert field internal name <span style="font-weight:400;color:#64748b">(optional)</span></label>
+  <p class="hint">Show a red critical banner when this field matches the value below. Example: <code>Priority</code></p>
+  <input type="text" id="criticalFieldName" placeholder="Priority" />
+
+  <label for="criticalFieldValue">Critical field value <span style="font-weight:400;color:#64748b">(optional)</span></label>
+  <p class="hint">The value that triggers the critical banner. Example: <code>A - Critical</code></p>
+  <input type="text" id="criticalFieldValue" placeholder="A - Critical" />
+
   <button id="save">Save settings</button>
   <span id="saved">✓ Saved — reload the alerts page for changes to take effect.</span>
 

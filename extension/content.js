@@ -4,6 +4,8 @@ const DEFAULTS = {
   descriptionSelector: '',
   triggerFieldName: '',
   triggerFieldValue: '',
+  criticalFieldName: '',
+  criticalFieldValue: '',
 };
 
 const ACTION_LABELS = {
@@ -176,6 +178,22 @@ function injectPanel(panel, config) {
   document.body.prepend(panel);
 }
 
+function isCritical(config) {
+  if (!config.criticalFieldName || !config.criticalFieldValue) return false;
+  const actual = getSharePointFieldValue(config.criticalFieldName);
+  return actual !== null && actual.toLowerCase() === config.criticalFieldValue.toLowerCase();
+}
+
+function buildCriticalBanner() {
+  const banner = document.createElement('div');
+  banner.id = 'batchman-critical-banner';
+  banner.innerHTML = `
+    <span class="batchman-critical-icon">🚨</span>
+    <span class="batchman-critical-text">CRITICAL ALERT — React immediately!</span>
+  `;
+  return banner;
+}
+
 function setBadge(status) {
   chrome.runtime.sendMessage({ type: 'SET_BADGE', status });
 }
@@ -190,9 +208,16 @@ function storePanelData(matches) {
 async function init() {
   const config = await loadConfig();
   if (!urlMatchesPattern(config.urlPattern)) return;
-  if (!triggerConditionMet(config)) return;
 
   if (document.getElementById('batchman-main-panel')) return;
+
+  // Critical banner is independent — show it regardless of trigger condition
+  if (isCritical(config) && !document.getElementById('batchman-critical-banner')) {
+    document.body.prepend(buildCriticalBanner());
+    setBadge('critical');
+  }
+
+  if (!triggerConditionMet(config)) return;
 
   let knowledgeBase;
   try {
