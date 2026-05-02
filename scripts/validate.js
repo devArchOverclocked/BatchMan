@@ -60,6 +60,18 @@ entries.forEach((entry, i) => {
     }
   });
 
+  // Validate regex match patterns
+  if (entry.match) {
+    const regexParts = entry.match.match(/^\/(.+)\/([gimsuy]*)$/);
+    if (regexParts) {
+      try {
+        new RegExp(regexParts[1], regexParts[2]);
+      } catch (e) {
+        error(`${label}: "match" contains an invalid regex: ${e.message}`);
+      }
+    }
+  }
+
   // action must be a recognised value if present
   if ('action' in entry && entry.action !== null) {
     if (!VALID_ACTIONS.has(entry.action)) {

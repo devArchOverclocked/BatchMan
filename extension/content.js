@@ -79,10 +79,20 @@ function getDescription(config) {
   return el ? el.textContent.trim() : document.body.innerText;
 }
 
+function entryMatches(description, matchPattern) {
+  const regexParts = matchPattern.match(/^\/(.+)\/([gimsuy]*)$/);
+  if (regexParts) {
+    try {
+      return new RegExp(regexParts[1], regexParts[2]).test(description);
+    } catch {
+      return false;
+    }
+  }
+  return description.toLowerCase().includes(matchPattern.toLowerCase());
+}
+
 function findMatches(description, knowledgeBase) {
-  return knowledgeBase.filter(entry =>
-    description.toLowerCase().includes(entry.match.toLowerCase())
-  );
+  return knowledgeBase.filter(entry => entryMatches(description, entry.match));
 }
 
 function escapeHtml(str) {
