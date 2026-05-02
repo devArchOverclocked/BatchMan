@@ -2,6 +2,8 @@ const DEFAULTS = {
   urlPattern: '',
   rowSelector: '.alert-row',
   descriptionSelector: '',
+  triggerFieldName: '',
+  triggerFieldValue: '',
 };
 
 async function load() {
@@ -9,6 +11,8 @@ async function load() {
   document.getElementById('urlPattern').value = stored.urlPattern;
   document.getElementById('rowSelector').value = stored.rowSelector;
   document.getElementById('descriptionSelector').value = stored.descriptionSelector;
+  document.getElementById('triggerFieldName').value = stored.triggerFieldName;
+  document.getElementById('triggerFieldValue').value = stored.triggerFieldValue;
 }
 
 document.getElementById('save').addEventListener('click', async () => {
@@ -16,12 +20,12 @@ document.getElementById('save').addEventListener('click', async () => {
     urlPattern: document.getElementById('urlPattern').value.trim(),
     rowSelector: document.getElementById('rowSelector').value.trim() || DEFAULTS.rowSelector,
     descriptionSelector: document.getElementById('descriptionSelector').value.trim(),
+    triggerFieldName: document.getElementById('triggerFieldName').value.trim(),
+    triggerFieldValue: document.getElementById('triggerFieldValue').value.trim(),
   };
 
   await chrome.storage.sync.set(settings);
 
-  // Update the manifest's content_scripts URL pattern dynamically isn't possible,
-  // but we store it so content.js can bail early if the URL doesn't match.
   const savedEl = document.getElementById('saved');
   savedEl.style.display = 'inline';
   setTimeout(() => { savedEl.style.display = 'none'; }, 4000);

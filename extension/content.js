@@ -2,6 +2,8 @@ const DEFAULTS = {
   urlPattern: '',
   rowSelector: '.alert-row',
   descriptionSelector: '',
+  triggerFieldName: '',
+  triggerFieldValue: '',
 };
 
 const ACTION_LABELS = {
@@ -27,6 +29,41 @@ function urlMatchesPattern(pattern) {
   if (!pattern) return true;
   const escaped = pattern.replace(/[.+^${}()|[\]\\?]/g, '\\$&').replace(/\*/g, '.*');
   return new RegExp(`^${escaped}$`).test(window.location.href);
+}
+
+// Walks HTML comment nodes to find the one with FieldInternalName="<name>",
+// then returns the text content of the first element sibling that follows it.
+// SharePoint places these comments immediately before the field value element.
+function getSharePointFieldValue(fieldInternalName) {
+  const walker = document.createTreeWalker(
+    document.body,
+    NodeFilter.SHOW_COMMENT
+  );
+
+  while (walker.nextNode()) {
+    const comment = walker.currentNode;
+    if (!comment.nodeValue.includes(`FieldInternalName="${fieldInternalName}"`)) continue;
+
+    // Scan forward through siblings for the first element node (skip whitespace text nodes)
+    let node = comment.nextSibling;
+    while (node) {
+      if (node.nodeType === Node.ELEMENT_NODE) {
+        return node.textContent.trim();
+      }
+      node = node.nextSibling;
+    }
+
+    // Fallback: use the parent container's text (minus the comment text itself)
+    return comment.parentElement?.textContent?.trim() ?? null;
+  }
+
+  return null;
+}
+
+function triggerConditionMet(config) {
+  if (!config.triggerFieldName || !config.triggerFieldValue) return true;
+  const actual = getSharePointFieldValue(config.triggerFieldName);
+  return actual !== null && actual.toLowerCase() === config.triggerFieldValue.toLowerCase();
 }
 
 function getDescription(config) {
@@ -136,7 +173,6 @@ function injectPanel(panel, config) {
     anchor.insertAdjacentElement('afterend', panel);
     return;
   }
-  // Fallback: prepend to body so it is always visible
   document.body.prepend(panel);
 }
 
@@ -154,6 +190,7 @@ function storePanelData(matches) {
 async function init() {
   const config = await loadConfig();
   if (!urlMatchesPattern(config.urlPattern)) return;
+  if (!triggerConditionMet(config)) return;
 
   if (document.getElementById('batchman-main-panel')) return;
 

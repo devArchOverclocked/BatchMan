@@ -83,6 +83,16 @@
   <p class="hint">Selector <em>within</em> each row for the description text. Leave empty to use the full row text.</p>
   <input type="text" id="descriptionSelector" placeholder=".alert-description" />
 
+  <hr>
+
+  <label for="triggerFieldName">Trigger field internal name <span style="font-weight:400;color:#64748b">(optional)</span></label>
+  <p class="hint">Only activate BatchMan when a specific SharePoint field has a required value. Enter the <code>FieldInternalName</code> from the page's HTML comments. Example: <code>CaseType</code></p>
+  <input type="text" id="triggerFieldName" placeholder="CaseType" />
+
+  <label for="triggerFieldValue">Required field value <span style="font-weight:400;color:#64748b">(optional)</span></label>
+  <p class="hint">BatchMan will only show if the field above equals this value (case-insensitive). Example: <code>Event</code></p>
+  <input type="text" id="triggerFieldValue" placeholder="Event" />
+
   <button id="save">Save settings</button>
   <span id="saved">✓ Saved — reload the alerts page for changes to take effect.</span>
 
@@ -93,7 +103,11 @@
     1. Open the alerts page and press <code>F12</code> to open DevTools.<br>
     2. Click the element picker (top-left of DevTools) and click an alert row.<br>
     3. Right-click the highlighted element → <em>Copy → Copy selector</em>.<br>
-    4. Paste it here and simplify if needed (e.g. remove <code>:nth-child</code> parts).
+    4. Paste it here and simplify if needed (e.g. remove <code>:nth-child</code> parts).<br><br>
+    <strong>How to find the trigger field internal name:</strong><br>
+    1. Open the alert page and press <code>F12</code>.<br>
+    2. Press <code>Ctrl+F</code> in DevTools and search for <code>FieldInternalName</code>.<br>
+    3. Find the comment next to the field you want (e.g. <code>SagsType</code>) and copy the value inside <code>FieldInternalName="..."</code>.
   </div>
 
   <script src="options.js"></script>
